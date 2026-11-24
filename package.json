@@ -1,0 +1,6 @@
+{
+  "name": "blinkwire",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "node --test tests/" }
+}
