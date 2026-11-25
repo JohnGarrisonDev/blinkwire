@@ -8,6 +8,8 @@
     "Puzzle"
   ],
   "daily": true,
+  "difficulty": 2,
+  "difficultyNote": "Calm, with no way to fail. Later chapters bring big boards that wrap around the edges.",
   "verb": "Connect",
   "tone": "blue",
   "players": "1 player",
