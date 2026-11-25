@@ -196,7 +196,7 @@ export function createUI(root, actions) {
     openConfirm({ title, text, yes, act }) {
       ui.openModal(`<h3>${esc(title)}</h3><p>${esc(text)}</p><div class="row"><button class="btn primary" data-act="${act}">${esc(yes)}</button><button class="btn" data-act="resume">Keep going</button></div>`, 'confirm')
     },
-    /** d: { heading, sub, stars, animate, lines: [[label, value]], notes: [text], daily: { streak, best, days: [{ letter, stars, today }] }, buttons: [{ act, label, primary }] } */
+    /** d: { heading, sub, stars, animate, lines: [[label, value]], notes: [text], daily: { streak, best, days: [{ letter, stars, today }] }, buttons: [{ act, label, primary }], talk }. Returns the empty talk slot when talk is set. */
     openSolved(d) {
       const daily = d.daily ? `
         <div class="streak"><div><b>${d.daily.streak}</b><span>day streak</span></div><div><b>${d.daily.best}</b><span>best</span></div></div>
@@ -208,7 +208,9 @@ export function createUI(root, actions) {
         <dl class="result">${d.lines.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>
         ${d.notes.map((n) => `<p class="note">${esc(n)}</p>`).join('')}
         ${daily}
-        <div class="row">${d.buttons.map((b) => `<button class="btn ${b.primary ? 'primary' : 'small'}" data-act="${b.act}">${esc(b.label)}</button>`).join('')}</div>`, 'solved')
+        <div class="row">${d.buttons.map((b) => `<button class="btn ${b.primary ? 'primary' : 'small'}" data-act="${b.act}">${esc(b.label)}</button>`).join('')}</div>
+        ${d.talk ? '<div class="talk-slot" hidden></div>' : ''}`, 'solved')
+      return f('sheet').querySelector('.talk-slot')
     },
 
     toast(text, ms = 2200) {

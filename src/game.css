@@ -178,6 +178,16 @@
 .day span { font: 500 0.62em var(--font-mono); color: var(--muted); }
 .day i { display: grid; place-items: center; width: 2.9em; height: 2.9em; border: 2px solid var(--edge); border-radius: 50%; background: var(--surface-2); font-style: normal; font-size: 0.68em; letter-spacing: -0.08em; color: var(--muted); }
 .day.on i { background: var(--yellow); color: var(--ink); }
+/* talk.js daily vote under the solved card's buttons. Kit sizes are px; keep it centred like the rest of the sheet. */
+.sheet .talk-daily { justify-self: stretch; margin-top: 0; color: var(--ink); }
+.sheet .talk-daily .talk-row { justify-content: center; }
+.sheet .talk-daily p { text-align: center; }
+.sheet .talk-daily { gap: 6px; padding-top: 8px; }
+.sheet .talk-daily .talk-row { flex-wrap: nowrap; gap: 6px; }
+.sheet .talk-daily .talk-choice { padding: 6px 10px; }
+/* The vote makes the solved card taller, so tighten its spacing to keep it from scrolling (more on phones). */
+.sheet:has(.talk-daily:not([hidden])) { gap: 0.5em; padding-top: 1em; padding-bottom: 1.1em; }
+.portrait .sheet:has(.talk-daily:not([hidden])) { gap: 0.4em; padding: 0.8em 1em 0.9em; }
 .day.today i { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4.5px var(--blue); }
 
 .toast { position: absolute; left: 50%; bottom: 6.2em; z-index: 6; max-width: 88%; padding: 0.6em 1.1em; border-radius: 99px; background: var(--ink); color: #fbf6ec; font-size: 0.9em; font-weight: 600; text-align: center; transform: translateX(-50%); pointer-events: none; }

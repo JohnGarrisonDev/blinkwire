@@ -56,6 +56,10 @@ A saved in-progress board is validated against the regenerated level when loaded
 - A new tile shape: masks only describe four arms, so anything richer (one-way wires, bridges, switches) needs a parallel per-tile array on the level (like `locked`). Remember `snapshot`/`restore`.
 - Keep colour from being the only signal. Lit wires have a pale core line and moving dots; loose lit ends get a pink spark; bolts are drawn as bolts.
 
+## Player input (kit/talk.js)
+
+`kit/talk.js` is the hub's anonymous input widget (copy, do not edit). `main.js` calls `tellUs` once for the `#tell-us` card under the stage, and `dailyTalk` on the daily solved card (`ui.openSolved({ talk: true })` returns an empty `.talk-slot`), with `score` = moves of the first solve from `save.daily.history` (fewer is better; single API board). Everything stays hidden when the API is unreachable.
+
 ## Save data
 
 One blob at `oddvale:blinkwire`. The schema is documented at the top of `src/logic/save.js`; `sanitize()` rebuilds a clean save from whatever it finds, so always add new fields there with a default. Each mode keeps one in-progress board (`progress.journey / daily / free`), written after every move and every 5 seconds while the clock runs. `last` remembers which mode was on screen so a reload drops the player straight back into the board.

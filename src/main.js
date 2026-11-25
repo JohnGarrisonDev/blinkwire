@@ -1,5 +1,6 @@
 // Blinkwire entry point: app state, screen flow, frame loop, saving. Rules live in src/logic (pure, tested).
 import { makeStore, wireChrome } from '../kit/kit.js'
+import { dailyTalk, tellUs } from '../kit/talk.js'
 import { generate } from './logic/generate.js'
 import { createSession, rotate, undo, togglePin, restart, hint, canRotate, lampCount, snapshot } from './logic/session.js'
 import { CHAPTERS, LEVEL_COUNT, PER_CHAPTER, journeyDef, levelLabel, isUnlocked } from './logic/levels.js'
@@ -318,7 +319,10 @@ function showSolved(animate) {
     sub = `Free play · ${def.w}×${def.h}${def.wrap ? ' wrap' : ''}`
     buttons.push({ act: 'free-start', label: 'New board', primary: true }, { act: 'free', label: 'Change size' }, { act: 'title', label: 'Title' })
   }
-  ui.openSolved({ heading, sub, stars: r.stars, animate: animate && !motion.matches, lines, notes, daily, buttons })
+  // Anonymous difficulty vote and "you beat N%" on the daily card. Score: moves of the first solve (fewer is better).
+  const rec = r.mode === 'daily' ? save.daily.history[def.date] : null
+  const slot = ui.openSolved({ heading, sub, stars: r.stars, animate: animate && !motion.matches, lines, notes, daily, buttons, talk: !!rec })
+  if (rec) dailyTalk(slot, { game: 'blinkwire', key: def.date, score: rec.moves, compact: true })
   if (animate) for (let k = 0; k < r.stars; k++) setTimeout(() => snd.star(k), 380 + k * 260)
 }
 
@@ -493,6 +497,7 @@ document.fonts?.ready.then(relayout)
 // ------------------------------------------------------------------ boot
 
 wireChrome({ stage })
+tellUs(document.getElementById('tell-us'), { game: 'blinkwire', issueUrl: 'https://github.com/JohnGarrisonDev/blinkwire/issues/new?template=feedback.yml' })
 {
   const today = dateKey(), p = save.progress
   if (save.last === 'journey' && p.journey && p.journey.level < LEVEL_COUNT) startJourney(p.journey.level)
