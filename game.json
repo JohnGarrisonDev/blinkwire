@@ -4,11 +4,19 @@
   "tagline": "Turn the tiles. Wake every sleepy eye in Oddvale.",
   "description": "The lamps of Oddvale are sleepy little eyes. Turn the wire tiles until every one of them is joined to the Big Eye and blinks awake, with no loose ends. 60 journey levels, a daily board with streaks, and endless free play.",
   "genre": "Logic puzzle",
+  "kinds": [
+    "Puzzle"
+  ],
+  "daily": true,
   "verb": "Connect",
   "tone": "blue",
   "players": "1 player",
   "session": "2–10 min puzzles",
-  "controls": ["Keyboard", "Mouse", "Touch"],
+  "controls": [
+    "Keyboard",
+    "Mouse",
+    "Touch"
+  ],
   "version": "1.0.0",
   "released": "2026-11-24",
   "updated": "2026-11-24",
