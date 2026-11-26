@@ -77,6 +77,15 @@ Serve the folder (see README) and open `/?debug`. `window.__game` then has `stat
 - The power wave is capped at about 0.65 s however long the wire is; lamp blips climb a pentatonic scale by share of lamps lit.
 - Tile size on a 360px-wide phone at 9 columns is about 33px. Do not go wider.
 
+## Phones and full screen (1.2.0)
+
+- The kit's `wireChrome({ stage, orientation: 'portrait' })` gives full screen on every phone (native, or the iPhone "focus" fallback; both add `.stage.is-full`); native full screen locks to portrait on Android because boards are never wider than tall.
+- The canvas is inset by the safe areas in full screen, so `ui.slot()` is measured against the **canvas** (not the stage), and `game.css` insets `.ui` by the same amounts. Keep the two in step.
+- Nothing sits under the kit's 44px exit button: in full screen the portrait `.hud-top` and the menu `.bar`s get 50px right padding, the landscape board/title slot 60px right margin, modals 60px top padding.
+- `input.js` reports `press(index)` while a pointer is down on a tile; `render.js` draws a bold ring (`opts.press`) so the finger never hides which tile will turn. Sliding more than 14px cancels the tap and the ring.
+- `setHud` adds `.tight` (drops the word "moves") when the stats row would overflow, not only on long numbers.
+- `haptic()` from the kit on turn, refusal, long-press pin and solve.
+
 ## Known weak spots
 
 - Phone landscape: the kit sizes the stage from the viewport height, so the stage is small unless the player goes full screen.
@@ -95,4 +104,3 @@ Serve the folder (see README) and open `/?debug`. `window.__game` then has `stat
 - A share image (canvas to PNG of the lit board silhouette, no wires) next to the text result.
 - Gentle ambient music loop built from the lamp scale, off by default.
 - Hint levels: first flash the tile, second press turns it for you.
-- Haptics on solve for phones.

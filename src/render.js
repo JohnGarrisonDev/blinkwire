@@ -233,6 +233,14 @@ export function createRenderer(canvas) {
       g.lineWidth = Math.max(2, t * 0.055); g.strokeStyle = COL.hint; g.stroke()
       g.globalAlpha = 1
     }
+    // touch / click press: a bold ring that reaches past the fingertip, so you can see which tile is about to turn
+    if (opts.press >= 0 && opts.press < n) {
+      const c = tileCentre(view, opts.press), e = t * 0.5 + Math.max(3, t * 0.08)
+      base(); g.lineJoin = 'round'
+      g.fillStyle = 'rgba(255, 201, 60, 0.28)'; rr(c.x - e, c.y - e, e * 2, e * 2, rad + 3); g.fill()
+      g.lineWidth = Math.max(5, t * 0.12); g.strokeStyle = COL.ink; g.stroke()
+      g.lineWidth = Math.max(3, t * 0.07); g.strokeStyle = C.orange; g.stroke()
+    }
     // keyboard cursor
     if (opts.cursor >= 0 && opts.cursor < n) {
       const c = tileCentre(view, opts.cursor), e = t * 0.5 + 1

@@ -170,7 +170,10 @@ export function createUI(root, actions) {
     setHud({ moves, lit, total, over }) {
       const m = f('p-moves'); m.textContent = moves; m.classList.toggle('over', !!over)
       f('p-lamps').textContent = `${lit}/${total}`
-      root.querySelector('.stats').classList.toggle('tight', String(moves).length + f('p-par').textContent.length > 4)
+      // drop the word "moves" when the numbers get long or the row does not fit (narrow phones)
+      const st = root.querySelector('.stats')
+      st.classList.toggle('tight', String(moves).length + f('p-par').textContent.length > 4)
+      if (!st.classList.contains('tight') && st.scrollWidth > st.clientWidth + 1) st.classList.add('tight')
     },
     setTime(text) { f('p-time').textContent = text },
     setTimerVisible(on) { f('p-timebox').hidden = !on },

@@ -8,6 +8,13 @@
   <link rel="canonical" href="https://games.oddvale.com/blinkwire/" />
   <meta name="theme-color" content="#17131f" />
   <link rel="icon" href="kit/favicon.svg" type="image/svg+xml" />
+  <!-- "Add to Home Screen" opens the whole arcade like an app (no browser bars), from any game page. -->
+  <link rel="manifest" href="../site.webmanifest" />
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Oddvale Games" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Oddvale Games" />
   <meta property="og:title" content="Blinkwire — Oddvale Games" />
@@ -61,7 +68,8 @@
           <li>Sure about a tile? <b>Pin</b> it so a stray tap cannot move it.</li>
         </ul></div>
         <div class="card yellow"><h2>Controls</h2><ul>
-          <li><b>Touch:</b> tap to turn, two-finger tap to turn back, long-press to pin. The Turn button flips the tap direction.</li>
+          <li><b>Touch:</b> tap to turn, two-finger tap to turn back, long-press to pin. The Turn button flips the tap direction; Undo, Hint, Pin and Restart are buttons under the board. Slide your finger off a tile to cancel a tap.</li>
+          <li><b>On a phone:</b> tap <b>Play full screen</b> under the game for bigger tiles.</li>
           <li><b>Mouse:</b> click to turn, right-click or <kbd>Shift</kbd>-click to turn back, long-press to pin.</li>
           <li><b>Keyboard:</b> arrows or <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move, <kbd>Space</kbd> turns, <kbd>Shift</kbd>+<kbd>Space</kbd> turns back.</li>
           <li><kbd>Z</kbd> undo · <kbd>H</kbd> hint · <kbd>P</kbd> pin · <kbd>R</kbd> restart · <kbd>Esc</kbd> menu</li>
@@ -74,7 +82,7 @@
 
   <footer class="footer">
     <div class="wrap">
-      <span>Blinkwire v1.1.0 · An <a href="https://oddvale.com">Oddvale</a> game. Your progress is saved in this browser only.</span>
+      <span>Blinkwire v1.2.0 · An <a href="https://oddvale.com">Oddvale</a> game. Your progress is saved in this browser only.</span>
       <span><a href="../">More games</a> · <a href="https://github.com/JohnGarrisonDev/blinkwire/issues/new?template=feedback.yml" target="_blank" rel="noopener">Feedback</a> · <a href="../privacy/">Privacy</a> · <a href="https://github.com/JohnGarrisonDev/blinkwire">Source</a></span>
     </div>
   </footer>

@@ -194,5 +194,29 @@
 .toast.in { animation: toast-in 0.25s cubic-bezier(0.3, 1.5, 0.5, 1); }
 @keyframes toast-in { from { transform: translateX(-50%) translateY(0.8em); opacity: 0; } }
 
+/* ---- phones (1.2.0): 44px targets on touch screens, readable labels */
+@media (pointer: coarse) {
+  .iconbtn { min-width: 44px; min-height: 44px; }
+  .tool { min-height: 50px; }
+  .dots button { width: 44px; height: 44px; }
+  .switch { min-height: 44px; }
+}
+.tool > span:last-child { font-size: max(0.62em, 11px); }
+.stat span { font-size: max(0.7em, 11px); }
+.portrait .stat span { font-size: max(0.62em, 10.5px); letter-spacing: 0.03em; }
+.tag { font-size: max(0.64em, 11px); }
+.toast { font-size: max(0.9em, 14px); }
+.tip, .portrait .tip { font-size: max(0.9em, 14px); }
+
+/* ---- full screen (kit adds .is-full): the overlay keeps to the same safe area as the canvas (the board slot is
+   measured against the canvas), and nothing sits under the kit's 44px exit button in the top-right corner. */
+.stage.is-full .ui { top: env(safe-area-inset-top, 0px); right: env(safe-area-inset-right, 0px); bottom: env(safe-area-inset-bottom, 0px); left: env(safe-area-inset-left, 0px); }
+.stage.is-full.portrait .hud-top, .stage.is-full .bar { padding-right: 50px; }
+.stage.is-full:not(.portrait) .play .slot, .stage.is-full:not(.portrait) .title .slot { margin-right: 60px; }
+.stage.is-full .modal { padding-top: 60px; }
+
+/* Kit workaround: the injected "Play full screen" button's icon has no size in kit/shell.css. */
+.stage-cta svg { width: 20px; height: 20px; flex: none; }
+
 /* Page (outside the stage): keys on the yellow Controls card stay readable in dark mode. */
 .card.yellow kbd { background: #fffdf8; border-color: #17131f; }

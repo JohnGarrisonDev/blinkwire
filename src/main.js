@@ -1,5 +1,5 @@
 // Blinkwire entry point: app state, screen flow, frame loop, saving. Rules live in src/logic (pure, tested).
-import { makeStore, wireChrome } from '../kit/kit.js'
+import { makeStore, wireChrome, haptic } from '../kit/kit.js'
 import { dailyTalk, tellUs } from '../kit/talk.js'
 import { generate } from './logic/generate.js'
 import { createSession, rotate, undo, togglePin, restart, hint, canRotate, lampCount, snapshot } from './logic/session.js'
@@ -24,7 +24,7 @@ const HEX = '0123456789abcdef'
 
 const app = {
   mode: null, def: null, level: null, session: null, bv: null, view: null,
-  cursor: -1, cursorOn: false, pinMode: false, pointer: null,
+  cursor: -1, cursorOn: false, pinMode: false, pointer: null, press: -1, pressAlt: false,
   celebrateAt: Infinity, cardAt: Infinity, celebrated: false, cardShown: false, result: null,
   chapter: 0, portrait: false, timeText: '', engaged: false, toldPin: false, toldHint: false,
 }
@@ -222,7 +222,7 @@ function turn(i, dir) {
   const s = app.session, now = performance.now()
   if (!s || s.solved || ui.modalOpen || i < 0) return
   if (!canRotate(s, i)) {
-    app.bv.nope(i, now); snd.nope()
+    app.bv.nope(i, now); snd.nope(); haptic([8, 40, 8])
     if (s.pinned[i] && !app.toldPin) { app.toldPin = true; ui.toast('Pinned. Long-press it (or press P) to unpin.') }
     return
   }
@@ -230,7 +230,7 @@ function turn(i, dir) {
   rotate(s, i, dir)
   if (!motion.matches) app.bv.spin(i, dir, now)
   app.bv.syncPower(now)
-  snd.turn(dir)
+  snd.turn(dir); haptic(6)
   if (s.flood.count < before) snd.dim()
   afterChange()
 }
@@ -347,7 +347,8 @@ attachPointer(canvas, {
     if (app.pinMode) pin(i)
     else turn(i, alt !== save.settings.ccw ? -1 : 1)
   },
-  longPress(i) { app.cursorOn = false; if (navigator.userActivation?.hasBeenActive) { try { navigator.vibrate?.(12) } catch { /* not allowed */ } } pin(i) },
+  longPress(i) { app.cursorOn = false; if (navigator.userActivation?.hasBeenActive) haptic(12); pin(i) },
+  press(i, alt) { app.press = i; app.pressAlt = !!alt },
 })
 
 document.addEventListener('pointerdown', (e) => { app.engaged = stage.contains(e.target) }, true)
@@ -420,12 +421,12 @@ function relayout() {
   stage.classList.toggle('portrait', app.portrait)
   const fs = app.portrait ? Math.min(w / 24, h / 38) : Math.min(w / 62, h / 38)
   uiRoot.style.fontSize = `${Math.max(12, Math.min(18, fs)).toFixed(2)}px`
-  if (ui.screen === 'play' && app.session) app.view = layoutBoard(app.level, ui.slot('play', stage))
-  if (ui.screen === 'title') { if (!demo.session) newDemo(); demo.view = layoutBoard(demo.session.level, ui.slot('title', stage)) }
+  if (ui.screen === 'play' && app.session) app.view = layoutBoard(app.level, ui.slot('play', canvas))
+  if (ui.screen === 'title') { if (!demo.session) newDemo(); demo.view = layoutBoard(demo.session.level, ui.slot('title', canvas)) }
 }
 
 function newDemo() {
-  const a = ui.slot('title', stage), wide = a.w > a.h * 1.35
+  const a = ui.slot('title', canvas), wide = a.w > a.h * 1.35
   const lvl = generate({ seed: (Math.random() * 4294967296) >>> 0, w: wide ? 6 : 5, h: wide ? 4 : 5 })
   demo.session = createSession(lvl)
   demo.bv = new BoardView(demo.session, performance.now())
@@ -470,7 +471,7 @@ function frame() {
   const woke = app.bv.takeWoken(now, woken)
   if (woke.length) { const lit = app.bv.litLamps(now), total = Math.max(1, app.level.lamps); for (let k = 0; k < woke.length; k++) snd.wake((lit - woke.length + k + 1) / total) }
   if (!app.celebrated && now >= app.celebrateAt) {
-    app.celebrated = true; app.bv.celebrateAt = now; snd.solve()
+    app.celebrated = true; app.bv.celebrateAt = now; snd.solve(); haptic([20, 60, 20, 60, 40])
     if (!motion.matches) {
       const c = tileCentre(app.view, app.level.source)
       confetti.burst(c.x, c.y, 46, 1.25)
@@ -479,7 +480,7 @@ function frame() {
     }
   }
   if (!app.cardShown && now >= app.cardAt) showSolved(true)
-  R.board(app.view, app.bv, now, { cursor: app.cursorOn && !s.solved ? app.cursor : -1, look: app.pointer, reduced: motion.matches })
+  R.board(app.view, app.bv, now, { cursor: app.cursorOn && !s.solved ? app.cursor : -1, press: !s.solved && !ui.modalOpen ? app.press : -1, look: app.pointer, reduced: motion.matches })
   if (confetti.update(dt)) R.confetti(confetti.parts)
 }
 function syncHudTime() { const t = formatTime(app.session.time); if (t !== app.timeText) { app.timeText = t; ui.setTime(t) } }
@@ -496,7 +497,8 @@ document.fonts?.ready.then(relayout)
 
 // ------------------------------------------------------------------ boot
 
-wireChrome({ stage })
+// Boards are always at least as tall as they are wide, so native full screen locks to portrait (Android only).
+wireChrome({ stage, orientation: 'portrait' })
 tellUs(document.getElementById('tell-us'), { game: 'blinkwire', issueUrl: 'https://github.com/JohnGarrisonDev/blinkwire/issues/new?template=feedback.yml' })
 {
   const today = dateKey(), p = save.progress

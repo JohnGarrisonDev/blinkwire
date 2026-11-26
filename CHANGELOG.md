@@ -2,6 +2,14 @@
 
 Newest first. Written for players.
 
+## 1.2.0 (2026-11-26)
+
+Plays better on phones:
+- Full screen on every phone, iPhone included: tap "Play full screen" under the game. Tiles get bigger (a 9-wide board goes from about 27 to 35 pixels on a small phone), and the board stays clear of the notch and the exit button.
+- The tile under your finger lights up with a bold ring while you press, so you can see which one is about to turn. Slide off it to cancel.
+- Bigger menu and tool buttons, larger labels under the tools and the move counter.
+- A little buzz when a tile turns, when a bolted tile refuses, on long-press pin and when the board lights up (Android, when sound is on).
+
 ## 1.1.0 (2026-11-25)
 
 Tell us what you think.
