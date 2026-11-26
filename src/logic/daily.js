@@ -53,5 +53,5 @@ export function formatTime(sec) {
 /** Spoiler-free result text for the clipboard. */
 export function shareText(key, r) {
   const size = `${r.w}x${r.h}${r.wrap ? ' wrap' : ''}`
-  return `Blinkwire daily ${key} · ${size} · ${r.moves} moves (par ${r.par}) · ${formatTime(r.time)} · ${starString(r.stars)}\ngames.oddvale.com/blinkwire`
+  return `Blinkwire daily ${key} · ${size} · ${r.moves} moves (par ${r.par}) · ${formatTime(r.time)} · ${starString(r.stars)}\nhttps://games.oddvale.com/blinkwire/`
 }

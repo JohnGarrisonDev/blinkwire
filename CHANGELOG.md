@@ -2,6 +2,16 @@
 
 Newest first. Written for players.
 
+## 1.3.0 (2026-11-26)
+
+- Hints play fair on boards with more than one answer. If you are heading for a different correct answer than the one we stored, the hint now helps you finish yours instead of turning your tiles back. It also keeps your pinned tiles where it can.
+- A friendlier free-play setup: a little picture of the board you are about to get (its shape, the Big Eye, bolts, dashed edges when it wraps), a tile count, and a word for how it will feel, from Breezy to Tough.
+- Levels you finished at or under par wear a blue PAR stamp, and each chapter counts them. Something to go back for.
+- On a phone held sideways, the daily result card is laid out in two columns, so Copy result, Title and Free play fit without scrolling. Every button in the game is at least 44px tall.
+- Copy result: if your browser will not copy, the result appears in a box, selected, ready to copy by hand. The shared link is now the full https://games.oddvale.com/blinkwire/.
+- The bolts in the free-play preview are scattered instead of lining up.
+- Bigger board on a phone held sideways: the game area grows from about 470x294 to about 656x328 on a typical phone.
+
 ## 1.2.0 (2026-11-26)
 
 Plays better on phones:

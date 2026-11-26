@@ -17,6 +17,12 @@ export const ICON = {
   minus: svg('<path d="M6 12h12"/>'),
   plus: svg('<path d="M6 12h12M12 6v12"/>'),
 }
+/** About one tile in ten, scattered (a small integer hash, so no rows or diagonals line up): where the preview draws bolts. */
+const boltAt = (i, w, h) => {
+  let x = (i * 31 + w * 977 + h * 7919 + 12345) | 0
+  x ^= x >>> 16; x = Math.imul(x, 0x85ebca6b); x ^= x >>> 13; x = Math.imul(x, 0xc2b2ae35); x ^= x >>> 16
+  return (x >>> 0) % 10 === 0
+}
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
 const stars = (n, cls = '') => `<span class="stars ${cls}" aria-label="${n} of 3 stars">${[0, 1, 2].map((k) => `<i class="${k < n ? 'on' : ''}">★</i>`).join('')}</span>`
 
@@ -58,16 +64,23 @@ export function createUI(root, actions) {
       <span class="total" data-f="f-total"></span>
     </header>
     <div class="free-body">
-      <div class="stepper"><span class="lbl">Wide</span><button class="iconbtn" data-act="size" data-k="w" data-d="-1" aria-label="Narrower">${ICON.minus}</button><b data-f="f-w">6</b><button class="iconbtn" data-act="size" data-k="w" data-d="1" aria-label="Wider">${ICON.plus}</button></div>
-      <div class="stepper"><span class="lbl">Tall</span><button class="iconbtn" data-act="size" data-k="h" data-d="-1" aria-label="Shorter">${ICON.minus}</button><b data-f="f-h">6</b><button class="iconbtn" data-act="size" data-k="h" data-d="1" aria-label="Taller">${ICON.plus}</button></div>
-      <div class="switches">
-        <button class="switch" data-act="opt" data-k="wrap" role="switch" aria-checked="false"><i></i><span><b>Wrap edges</b><small>Wires loop round the board. Harder.</small></span></button>
-        <button class="switch" data-act="opt" data-k="lock" role="switch" aria-checked="false"><i></i><span><b>Bolted tiles</b><small>A few fixed anchors. Kinder.</small></span></button>
+      <div class="free-preview" aria-hidden="true">
+        <div class="mini" data-f="f-mini"></div>
+        <p class="mini-cap"><b data-f="f-dims">6 × 6</b><span data-f="f-tiles">36 tiles</span></p>
       </div>
-      <p class="note" data-f="f-note"></p>
-      <div class="row">
-        <button class="btn primary" data-act="free-start">New board</button>
-        <button class="btn" data-act="free-resume" data-f="f-resume" hidden>Continue</button>
+      <div class="free-opts">
+        <div class="stepper"><span class="lbl">Wide</span><button class="iconbtn" data-act="size" data-k="w" data-d="-1" aria-label="Narrower">${ICON.minus}</button><b data-f="f-w">6</b><button class="iconbtn" data-act="size" data-k="w" data-d="1" aria-label="Wider">${ICON.plus}</button></div>
+        <div class="stepper"><span class="lbl">Tall</span><button class="iconbtn" data-act="size" data-k="h" data-d="-1" aria-label="Shorter">${ICON.minus}</button><b data-f="f-h">6</b><button class="iconbtn" data-act="size" data-k="h" data-d="1" aria-label="Taller">${ICON.plus}</button></div>
+        <div class="switches">
+          <button class="switch" data-act="opt" data-k="wrap" role="switch" aria-checked="false"><i></i><span><b>Wrap edges</b><small>Wires loop round the board. Harder.</small></span></button>
+          <button class="switch" data-act="opt" data-k="lock" role="switch" aria-checked="false"><i></i><span><b>Bolted tiles</b><small>A few fixed anchors. Kinder.</small></span></button>
+        </div>
+        <p class="feel-line"><span class="lbl">Feels</span><span class="feel" data-f="f-feel">Steady</span></p>
+        <p class="note" data-f="f-note"></p>
+        <div class="row">
+          <button class="btn primary" data-act="free-start">New board</button>
+          <button class="btn" data-act="free-resume" data-f="f-resume" hidden>Continue</button>
+        </div>
       </div>
     </div>
   </section>
@@ -129,18 +142,20 @@ export function createUI(root, actions) {
 
     setTitle({ journey, daily, free }) { f('t-journey').textContent = journey; f('t-daily').textContent = daily; f('t-free').textContent = free },
 
-    setLevels({ chapter, starList, total, resume }) {
+    setLevels({ chapter, starList, total, resume, perfect = [] }) {
       const ch = CHAPTERS[chapter]
       f('l-total').innerHTML = `<i class="star">★</i> ${total} / ${CHAPTERS.length * PER_CHAPTER * 3}`
       f('l-chno').textContent = `Chapter ${chapter + 1} of ${CHAPTERS.length}`
       f('l-chname').textContent = ch.name
-      f('l-blurb').textContent = ch.blurb
+      const first = chapter * PER_CHAPTER, done = perfect.slice(first, first + PER_CHAPTER).filter(Boolean).length
+      f('l-blurb').textContent = done ? `${ch.blurb} · ${done} at par` : ch.blurb
       const firstOpen = starList.findIndex((s, i) => !s && isUnlocked(starList, i))
       let html = ''
       for (let n = 0; n < PER_CHAPTER; n++) {
         const i = chapter * PER_CHAPTER + n, open = isUnlocked(starList, i), def = journeyDef(i), st = starList[i] | 0
-        const cls = ['lvl', st ? 'done' : '', i === firstOpen ? 'next' : '', open ? '' : 'locked'].join(' ')
-        html += `<button class="${cls}" data-act="level" data-i="${i}" ${open ? '' : 'disabled'} aria-label="Level ${levelLabel(i)}, ${def.w} by ${def.h}${def.wrap ? ', wrap' : ''}${open ? `, ${st} stars` : ', locked'}">`
+        const cls = ['lvl', st ? 'done' : '', i === firstOpen ? 'next' : '', open ? '' : 'locked'].join(' '), par = open && st && perfect[i]
+        html += `<button class="${cls}" data-act="level" data-i="${i}" ${open ? '' : 'disabled'} aria-label="Level ${levelLabel(i)}, ${def.w} by ${def.h}${def.wrap ? ', wrap' : ''}${open ? `, ${st} stars` : ', locked'}${par ? ', solved at par' : ''}">`
+          + (par ? '<i class="parmark" aria-hidden="true">PAR</i>' : '')
           + (open ? `<b>${n + 1}</b>${stars(st)}<small>${def.w}×${def.h}${def.wrap ? ' ∞' : ''}${i === resume ? ' · …' : ''}</small>` : `${ICON.lock}<small>${def.w}×${def.h}</small>`) + '</button>'
       }
       f('l-grid').innerHTML = html
@@ -149,8 +164,18 @@ export function createUI(root, actions) {
       prev.disabled = chapter === 0; next.disabled = chapter === CHAPTERS.length - 1
     },
 
-    setFree({ w, h, wrap, lock, solved, maxW, maxH, min, resume, note }) {
+    setFree({ w, h, wrap, lock, solved, maxW, maxH, min, resume, note, feel }) {
       f('f-w').textContent = w; f('f-h').textContent = h
+      // A little picture of the board: its shape, the Big Eye near the middle, bolts if on, dashed edges if it wraps.
+      const mini = f('f-mini'), src = Math.floor(h / 2) * w + Math.floor(w / 2)
+      mini.className = `mini ${wrap ? 'wrap' : ''}`
+      mini.style.setProperty('--w', w); mini.style.setProperty('--h', h)
+      let cells = ''
+      for (let i = 0; i < w * h; i++) cells += `<i class="${i === src ? 'src' : lock && boltAt(i, w, h) ? 'bolt' : ''}"></i>`
+      mini.innerHTML = cells
+      f('f-dims').textContent = `${w} × ${h}`
+      f('f-tiles').textContent = `${w * h} tiles${wrap ? ' · wraps' : ''}${lock ? ' · bolts' : ''}`
+      const fl = f('f-feel'); fl.textContent = feel.label; fl.className = `feel ${feel.cls}`
       f('f-total').textContent = solved ? `${solved} solved` : ''
       for (const b of root.querySelectorAll('.free .stepper .iconbtn')) {
         const v = b.dataset.k === 'w' ? w : h, max = b.dataset.k === 'w' ? maxW : maxH

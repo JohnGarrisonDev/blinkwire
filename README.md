@@ -60,6 +60,7 @@ src/logic/          pure rules, no DOM, shared with the tests
   levels.js         the 60 Journey levels
   daily.js          daily seeds, streaks, share text
   session.js        a board in play: turn, undo, pin, hint, snapshot/restore
+  solve.js          the solution nearest the player's board (hints on boards with more than one answer)
   stars.js          star thresholds
   save.js           save schema + sanitiser
 tests/              node --test

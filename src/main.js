@@ -93,9 +93,10 @@ const actions = {
   async copy(_, el) {
     const key = app.def.date, rec = save.daily.history[key]
     if (!rec) return
-    const ok = await copyText(shareText(key, rec))
+    const text = shareText(key, rec), ok = await copyText(text)
     snd.copy()
-    if (el) { el.textContent = ok ? 'Copied!' : 'Copy failed'; setTimeout(() => { if (el.isConnected) el.textContent = 'Copy result' }, 1600) }
+    if (el) { el.textContent = ok ? 'Copied!' : 'Copy it below'; setTimeout(() => { if (el.isConnected) el.textContent = 'Copy result' }, 1600) }
+    if (!ok && el) showShareBox(el, text)
   },
 }
 const ui = createUI(uiRoot, actions)
@@ -117,12 +118,29 @@ function showTitle(focus = true) {
   if (focus) ui.focusFirst()
 }
 
+const parCache = new Map()
+function journeyPar(i) {
+  if (!parCache.has(i)) parCache.set(i, generate(journeyDef(i)).par)
+  return parCache.get(i)
+}
+
 function showLevels(keepFocus = false) {
   save.last = null
   ui.closeModal()
-  ui.setLevels({ chapter: app.chapter, starList: Array.from({ length: LEVEL_COUNT }, (_, i) => save.journey.stars[i] | 0), total: totalStars(save), resume: save.progress.journey ? save.progress.journey.level : -1 })
+  // "Perfect" = best solve at or under par. Pars come from the regenerated level (a few ms per chapter, cached).
+  const perfect = Array.from({ length: LEVEL_COUNT }, (_, i) => {
+    const b = save.journey.best[i]
+    return !!b && b.moves <= journeyPar(i)
+  })
+  ui.setLevels({ chapter: app.chapter, starList: Array.from({ length: LEVEL_COUNT }, (_, i) => save.journey.stars[i] | 0), total: totalStars(save), resume: save.progress.journey ? save.progress.journey.level : -1, perfect })
   ui.show('levels'); relayout()
   if (!keepFocus) ui.focusFirst()
+}
+
+/** A rough word for how a free-play board will feel: size, then wrap (much harder) and bolts (kinder). */
+function freeFeel(f) {
+  const score = f.w * f.h * (f.wrap ? 2.4 : 1) * (f.lock ? 0.8 : 1)
+  return score < 30 ? { label: 'Breezy', cls: 'mint' } : score < 60 ? { label: 'Steady', cls: 'yellow' } : score < 120 ? { label: 'Tricky', cls: 'orange' } : { label: 'Tough', cls: 'pink' }
 }
 
 function showFree(keepFocus = false) {
@@ -133,6 +151,7 @@ function showFree(keepFocus = false) {
   ui.setFree({
     ...f, maxW, maxH: FREE_MAX, min: FREE_MIN,
     resume: p ? `${p.def.w}×${p.def.h}${p.def.wrap ? ' wrap' : ''}` : '',
+    feel: freeFeel(f),
     note: maxW < FREE_MAX ? 'Boards are at most 9 wide on small screens, so tiles stay easy to tap.' : f.w * f.h >= 100 ? 'Big board. Pin tiles as you go.' : '',
   })
   ui.show('free'); relayout()
@@ -326,6 +345,19 @@ function showSolved(animate) {
   if (animate) for (let k = 0; k < r.stars; k++) setTimeout(() => snd.star(k), 380 + k * 260)
 }
 
+/** When the browser refuses both clipboard routes: show the result in a read-only, selected box to copy by hand. */
+function showShareBox(el, text) {
+  const row = el.closest('.row') || el.parentElement
+  let box = row.parentElement.querySelector('.sharebox')
+  if (!box) {
+    box = document.createElement('textarea')
+    box.className = 'sharebox'; box.readOnly = true; box.rows = 4; box.setAttribute('aria-label', 'Your result, to copy by hand')
+    row.before(box)
+  }
+  box.value = text
+  box.focus({ preventScroll: true }); box.select()
+}
+
 async function copyText(text) {
   try { await navigator.clipboard.writeText(text); return true } catch { /* fall through to the old way */ }
   try {
@@ -419,6 +451,7 @@ function relayout() {
   const { w, h } = R.resize()
   app.portrait = w < h * 0.95
   stage.classList.toggle('portrait', app.portrait)
+  stage.classList.toggle('short', !app.portrait && h < 520) // a phone on its side: two-column result card
   const fs = app.portrait ? Math.min(w / 24, h / 38) : Math.min(w / 62, h / 38)
   uiRoot.style.fontSize = `${Math.max(12, Math.min(18, fs)).toFixed(2)}px`
   if (ui.screen === 'play' && app.session) app.view = layoutBoard(app.level, ui.slot('play', canvas))
@@ -445,7 +478,7 @@ function updateDemo(now) {
   }
   if (now < demo.nextAt) return
   demo.nextAt = now + 430
-  const i = hint(s)
+  const i = hint(s, { stored: true })
   if (i < 0) return
   rotate(s, i, 1)
   if (!motion.matches) demo.bv.spin(i, 1, now)

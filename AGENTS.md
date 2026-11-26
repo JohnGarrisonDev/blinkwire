@@ -23,7 +23,8 @@ A tile is a 4-bit mask of connections: north 1, east 2, south 4, west 8. Rotatin
 - Every quarter turn costs one move, in either direction. Undo refunds the move.
 - Par = fewest clockwise taps from the scramble to the stored solution (a straight is at most 1 away, a cross 0). Turning counter-clockwise can therefore finish under par; that is intended and the solve card celebrates it.
 - Stars (`stars.js`): 3 if moves <= par + max(1, 10%), 2 if moves <= par + max(4, 50%), else 1. Using a hint caps the level at 2.
-- Hints flash a tile that differs from the stored solution, nearest the source first. A few boards have more than one solution; any of them counts as solved, but hints always steer toward the stored one.
+- Hints flash a tile that differs from the target solution, nearest the source first. A few boards (about one in ten, mostly wrap) have more than one solution; any of them counts as solved (`flood`). Since 1.3 the target is `nearestSolution(level, cur, pinned)` in `src/logic/solve.js`: a small constraint search (arc consistency on arm matches, branch and bound on tiles that differ from the player's board, a wrong pinned tile counts double) that keeps the stored solution on ties and when its node budget (12000) runs out. Worst case seen: about 60 ms on a 12x12 wrap board from a full scramble on desktop; usually a few ms. The title demo passes `{ stored: true }` so it walks the stored answer. `countSolutions` there is for tests (`tests/solve.test.js` finds shipped boards with a second answer and checks hints never fight it).
+- Par and stars still use the stored solution, so a different answer can need more or fewer turns than par.
 
 ## Level format and seeds (read before touching the generator)
 
@@ -55,6 +56,16 @@ A saved in-progress board is validated against the regenerated level when loaded
 - A new rule flag (like `wrap`): add it to the definition, thread it through `generate` (after all existing `rng()` calls, or behind a `gen` switch), handle it in `flood`/`neighbor` if it changes connectivity, draw it in `render.js`, show a chip in `startBoard` (`main.js`), save it in `persist` and `sanitize` for free play, and add tests.
 - A new tile shape: masks only describe four arms, so anything richer (one-way wires, bridges, switches) needs a parallel per-tile array on the level (like `locked`). Remember `snapshot`/`restore`.
 - Keep colour from being the only signal. Lit wires have a pale core line and moving dots; loose lit ends get a pink spark; bolts are drawn as bolts.
+
+## Free-play setup (1.3)
+
+Two columns in landscape (preview | options), one in portrait (a smaller preview beside its caption on top). The preview `.mini` is a DOM grid sized by `--w`/`--h`; the source dot sits in the middle, bolts follow a fixed pattern (it is a picture, not the real board), and wrap adds dashed edges. `freeFeel()` in `main.js` turns size, wrap and bolts into Breezy / Steady / Tricky / Tough (shown as a word on a coloured pill).
+
+- Bolts in the preview come from `boltAt(i, w, h)` in `ui.js`, a small integer hash (about one tile in ten, scattered).
+
+## Result card and copying (1.3)
+
+`main.js` adds `.short` to the stage when it is landscape and under 520px tall (a phone on its side). There the solved card is two columns: results on the left, streak, days, the copy box, buttons and the vote on the right; in full screen it keeps clear of the exit button with right padding. `.ui .btn` has `min-height: 44px`. Copy result tries the clipboard API, then `execCommand`; if both fail, `showShareBox` puts the text in a read-only, selected `textarea.sharebox` (on an upright phone the days row hides to make room). Share text ends with `https://games.oddvale.com/blinkwire/`. Not checked with the daily vote showing (the API is not served locally).
 
 ## Player input (kit/talk.js)
 
@@ -88,8 +99,9 @@ Serve the folder (see README) and open `/?debug`. `window.__game` then has `stat
 
 ## Known weak spots
 
-- Phone landscape: the kit sizes the stage from the viewport height, so the stage is small unless the player goes full screen.
-- Hints can point at a tile that is fine in an alternative solution (rare, mostly on wrap boards).
+- Phone landscape (1.3): `game.css` uses a 2:1 stage and `max-width: (100dvh - 62px) * 2` under `(orientation: landscape) and (max-height: 500px)`, so an 844x390 phone gets a 656x328 stage (was 470x294); the stage then exactly fills the viewport under the 62px top bar. Wider stages lift `maxFreeW` to 12 there, so a 12x12 free board gets about 24px tiles sideways (9x12 was already possible before).
+- The free-play note about the 9-wide cap is computed when the screen opens, not on resize.
+- Par is measured to the stored answer only; a player solving another answer may beat or miss par for that reason.
 - The canvas redraws every frame even when nothing moves (the pulse dots always move). Fine on phones so far, but an idle-throttle would save battery.
 - No colour-blind or high-contrast toggle beyond the built-in non-colour cues.
 
@@ -98,7 +110,7 @@ Serve the folder (see README) and open `/?debug`. `window.__game` then has `stat
 - A light twist tile for a chapter 7: "sleepy fog" (tiles hidden until a neighbour is lit), one-way diodes, or twin tiles that turn together.
 - Second source colour: two Big Eyes, lamps tinted by who feeds them, mixing where they meet.
 - Daily archive: play past days from the history strip (no streak credit).
-- Per-level best time on the level buttons, and a "perfect" marker for at-or-under-par solves.
+- Per-level best time on the level buttons. (The "PAR" stamp for at-or-under-par solves shipped in 1.3: `showLevels` computes pars with `journeyPar(i)`, cached.)
 - Unique-solution generator pass (reject or patch boards with more than one solution), as `gen: 2`.
 - Zoom and pan for 12x12 on small phones, which would lift the 9-column cap.
 - A share image (canvas to PNG of the lit board silhouette, no wires) next to the text result.

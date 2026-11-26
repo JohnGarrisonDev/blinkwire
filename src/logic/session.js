@@ -1,6 +1,7 @@
 // One board in play: current rotations, pins, moves, undo, hints. Pure, no DOM, no clock.
 import { rotN, orientations, flood, tapsBetween, popcount } from './grid.js'
 import { solutionDepth } from './generate.js'
+import { nearestSolution } from './solve.js'
 
 const UNDO_CAP = 600
 
@@ -59,21 +60,24 @@ export function restart(s) {
 
 /**
  * Pick one tile that is not in its solved orientation, nearest the source first. Marks the session as hinted.
+ * Some boards have more than one answer: the hint aims at the answer closest to the player's board (respecting pins
+ * where it can), so it never undoes a correct alternative. `stored: true` aims at the stored answer (the title demo).
  * Returns the tile index, or -1 if every tile already matches.
  */
-export function hint(s) {
+export function hint(s, { stored = false } = {}) {
   if (s.solved) return -1
-  const depth = solutionDepth(s.level)
+  const target = stored ? s.level.sol : nearestSolution(s.level, s.cur, s.pinned).sol
+  const depth = stored ? solutionDepth(s.level) : flood(s.level, target).depth
   let best = -1
   for (let i = 0; i < s.cur.length; i++) {
-    if (s.cur[i] === s.level.sol[i]) continue
+    if (s.cur[i] === target[i]) continue
     if (best < 0 || depth[i] < depth[best]) best = i
   }
   if (best >= 0) s.hinted = true
   return best
 }
 
-/** Fewest clockwise taps still needed to reach the stored solution. */
+/** Fewest clockwise taps still needed to reach the stored solution (tests and tools). */
 export function tapsLeft(s) {
   let t = 0
   for (let i = 0; i < s.cur.length; i++) t += tapsBetween(s.cur[i], s.level.sol[i])

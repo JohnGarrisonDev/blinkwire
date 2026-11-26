@@ -43,7 +43,7 @@ test('streaks', () => {
 
 test('share text is short and spoiler-free', () => {
   assert.equal(shareText('2026-11-24', { w: 8, h: 8, wrap: false, moves: 41, par: 36, time: 133, stars: 2 }),
-    'Blinkwire daily 2026-11-24 · 8x8 · 41 moves (par 36) · 2:13 · ★★☆\ngames.oddvale.com/blinkwire')
+    'Blinkwire daily 2026-11-24 · 8x8 · 41 moves (par 36) · 2:13 · ★★☆\nhttps://games.oddvale.com/blinkwire/')
   assert.match(shareText('2026-11-24', { w: 5, h: 6, wrap: true, moves: 9, par: 9, time: 5, stars: 3 }), /5x6 wrap · 9 moves \(par 9\) · 0:05 · ★★★/)
   assert.equal(formatTime(3725), '1:02:05')
 })
